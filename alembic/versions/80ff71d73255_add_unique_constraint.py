@@ -23,4 +23,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     with op.batch_alter_table("foo") as batch_op:
-        batch_op.drop_constraint(constraint_name="uq_foo_value", type_="unique")
+        batch_op.drop_constraint(constraint_name="value", type_="unique")
