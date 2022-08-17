@@ -26,10 +26,11 @@ batch_op.create_unique_constraint()
 
 """
 
-from typing import NamedTuple
+import os
+from pathlib import Path
 
 import sqlalchemy as sqla
-from sqlalchemy.orm import registry
+from sqlalchemy.orm import registry, sessionmaker
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 
@@ -58,3 +59,29 @@ class SQLABase(metaclass=DeclarativeMeta):
 
 
 del reg
+
+class FooModel(SQLABase):
+    """Sqlalchemy model to demonstrate migration misbehavior."""
+    
+    __tablename__ = "foo"
+    __table_args__ = (
+        sqla.PrimaryKeyConstraint("prim_id"),
+    )
+    
+    prim_id = sqla.Column(sqla.Integer)
+    value = sqla.Column(sqla.Integer)
+    
+    def __repr__(self):
+        return f"FooModel(value='{self.value}')"
+    
+
+def create_session(db_path, /, *, create_tables=False):
+    db_path = Path(db_path)
+    path_str = os.fsdecode(db_path.resolve())
+    conn_str = f"sqlite:///{path_str}"
+    engine = sqla.create_engine(conn_str, future=True)
+    
+    if create_tables:
+        SQLABase.metadata.create_all(engine)
+        
+    return engine, sessionmaker()(bind=engine)
